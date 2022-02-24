@@ -11,26 +11,16 @@ import {
   Vec3,
 } from "cc";
 const { ccclass, property } = _decorator;
-
-/**
- * Predefined variables
- * Name = Viewer
- * DateTime = Tue Feb 22 2022 22:47:44 GMT+0800 (中国标准时间)
- * Author = zikun
- * FileBasename = Viewer.ts
- * FileBasenameNoExtension = Viewer
- * URL = db://assets/Viewer.ts
- * ManualUrl = https://docs.cocos.com/creator/3.4/manual/zh/
- *
- */
-
 @ccclass("Viewer")
 export class Viewer extends Component {
   moveDirection: Vec2 = new Vec2(0, 0);
   speed: number = 0.1;
-  touched: boolean = false;
+  leftTouched: boolean = false;
+  rightTouched: boolean = false;
   touchStartPos: Vec2 = new Vec2();
   deltaTouchPos: Vec2 = new Vec2();
+  touchStartPosition: Vec3 = new Vec3();
+  moveTargetPosition: Vec3 = new Vec3();
   touchStartRotation: math.Quat = new math.Quat();
   touchStartAngle: Vec3 = new Vec3();
   deltaAngle: Vec3 = new Vec3();
@@ -50,13 +40,35 @@ export class Viewer extends Component {
     }
   }
   mouseDown(mouseEvent: EventMouse) {
-    this.touched = true;
     mouseEvent.getLocation(this.touchStartPos);
-    this.node.getRotation(this.touchStartRotation);
-    this.touchStartRotation.getEulerAngles(this.touchStartAngle);
+    if (!this.leftTouched && !this.rightTouched) {
+      switch (mouseEvent.getButton()) {
+        case 0: //mouseLeft
+          this.leftTouched = true;
+          this.node.getPosition(this.touchStartPosition);
+          break;
+        case 2: //mouseRight
+          this.rightTouched = true;
+          this.node.getRotation(this.touchStartRotation);
+          this.touchStartRotation.getEulerAngles(this.touchStartAngle);
+          break;
+        default:
+          break;
+      }
+    }
   }
   mouseMove(mouseEvent: EventMouse) {
-    if (this.touched) {
+    if (this.leftTouched) {
+      mouseEvent.getLocation(this.deltaTouchPos);
+      this.deltaTouchPos.subtract(this.touchStartPos);
+      this.moveTargetPosition.set(
+        this.node.up.multiplyScalar(this.deltaTouchPos.y * -0.01)
+      );
+      this.moveTargetPosition
+        .add(this.node.right.multiplyScalar(this.deltaTouchPos.x * -0.01))
+        .add(this.touchStartPosition);
+      this.node.setPosition(this.moveTargetPosition);
+    } else if (this.rightTouched) {
       mouseEvent.getLocation(this.deltaTouchPos);
       this.deltaTouchPos.subtract(this.touchStartPos);
       this.deltaAngle.set(
@@ -68,7 +80,16 @@ export class Viewer extends Component {
     }
   }
   mouseUp(mouseEvent: EventMouse) {
-    this.touched = false;
+    switch (mouseEvent.getButton()) {
+      case 0: //mouseLeft
+        this.leftTouched = false;
+        break;
+      case 2: //mouseRight
+        this.rightTouched = false;
+        break;
+      default:
+        break;
+    }
   }
   keyDown(keyEvent: EventKeyboard) {
     switch (keyEvent.keyCode) {
@@ -124,14 +145,3 @@ export class Viewer extends Component {
     }
   }
 }
-
-/**
- * [1] Class member could be defined like this.
- * [2] Use `property` decorator if your want the member to be serializable.
- * [3] Your initialization goes here.
- * [4] Your update function goes here.
- *
- * Learn more about scripting: https://docs.cocos.com/creator/3.4/manual/zh/scripting/
- * Learn more about CCClass: https://docs.cocos.com/creator/3.4/manual/zh/scripting/ccclass.html
- * Learn more about life-cycle callbacks: https://docs.cocos.com/creator/3.4/manual/zh/scripting/life-cycle-callbacks.html
- */

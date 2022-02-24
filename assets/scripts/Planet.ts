@@ -19,19 +19,26 @@ const { ccclass, property } = _decorator;
 
 @ccclass("Planet")
 export class Planet extends Component {
-  position: Vec3; //位置
-  mess: number; //质量
-  radius: number; //半径
+  position: Vec3; //位置 m
+  mess: number; //质量 kg
+  radius: number; //半径 m
+  cycle: number; // 自转周期s
+  speed: Vec3; //瞬时速度 m/s
+  force: Vec3; //瞬时受力 N
 
-  /**
-   *
-   */
-  //   constructor(position: Vec3, mess: number, radius: number) {
-  //     super();
-  //     this.position = position;
-  //     this.mess = mess;
-  //     this.radius = radius;
-  //   }
+  active: boolean;
+  editorPanel: Node = null;
+
+  init(position: Vec3, mess: number, radius: number) {
+    this.position = position;
+    this.mess = mess;
+    this.radius = radius;
+    this.speed = new Vec3();
+    this.force = new Vec3();
+    this.active = false;
+
+    this.node.setPosition(position);
+  }
 
   // [1]
   // dummy = '';
@@ -57,14 +64,3 @@ export class Planet extends Component {
     // [4]
   }
 }
-
-/**
- * [1] Class member could be defined like this.
- * [2] Use `property` decorator if your want the member to be serializable.
- * [3] Your initialization goes here.
- * [4] Your update function goes here.
- *
- * Learn more about scripting: https://docs.cocos.com/creator/3.4/manual/zh/scripting/
- * Learn more about CCClass: https://docs.cocos.com/creator/3.4/manual/zh/scripting/ccclass.html
- * Learn more about life-cycle callbacks: https://docs.cocos.com/creator/3.4/manual/zh/scripting/life-cycle-callbacks.html
- */
